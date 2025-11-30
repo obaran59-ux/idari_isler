@@ -14,8 +14,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        .sidebar-bg { background-color: #111c44; }
+        body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at 20% 20%, #e0e7ff 0, transparent 30%), radial-gradient(circle at 80% 10%, #ffe4e6 0, transparent 28%), radial-gradient(circle at 40% 80%, #d1fae5 0, transparent 25%), #f6f7fb; }
+        .sidebar-bg { background: linear-gradient(180deg, #0f172a 0%, #111c44 60%, #0f172a 100%); }
         .folder-tab-active { background-color: white; border-bottom: 2px solid white; color: #2563eb; font-weight: 600; }
         .folder-tab-inactive { background-color: #f3f4f6; color: #6b7280; }
         .folder-tab-inactive:hover { background-color: #e5e7eb; }
@@ -30,6 +30,14 @@
         body.modal-active { overflow-x: hidden; overflow-y: visible !important; }
         .file-actions { display: none; }
         .group:hover .file-actions { display: flex; }
+        .decorative-blob { position: absolute; border-radius: 9999px; filter: blur(80px); opacity: 0.28; }
+        .decorative-blob.blue { width: 220px; height: 220px; background: #a5b4fc; top: 16px; right: 40px; }
+        .decorative-blob.pink { width: 240px; height: 240px; background: #fbcfe8; bottom: 80px; left: 18%; }
+        .decorative-blob.teal { width: 200px; height: 200px; background: #99f6e4; top: 280px; left: 8%; }
+        .toolbar-card { backdrop-filter: blur(10px); background: rgba(255,255,255,0.88); border: 1px solid rgba(255,255,255,0.7); box-shadow: 0 20px 40px rgba(17, 24, 39, 0.08); }
+        .info-chip { border: 1px solid rgba(148, 163, 184, 0.35); background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(59, 130, 246, 0.08)); box-shadow: inset 0 1px 0 rgba(255,255,255,0.8); }
+        .info-chip strong { color: #0f172a; }
+        .hero-badge { background: linear-gradient(135deg, #eef2ff, #e0f2fe); border: 1px solid rgba(59, 130, 246, 0.25); }
         /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -91,120 +99,163 @@
             </div>
         </header>
 
-        <div class="flex-1 overflow-auto p-8 relative">
-            <!-- DASHBOARD -->
-            <div id="section-dashboard" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6" id="dashboard-stats"></div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col h-full">
-                        <div class="p-4 bg-[#dc3545] text-white flex justify-between items-center"><h3 class="font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i> Kritik Sistem Uyarıları</h3></div>
-                        <div class="flex-1 p-0 overflow-y-auto"><table class="w-full text-left text-sm text-gray-600"><tbody class="divide-y divide-gray-100" id="system-alerts-table"></tbody></table></div>
+        <div class="flex-1 overflow-auto p-6 md:p-10 relative">
+            <span class="decorative-blob blue"></span>
+            <span class="decorative-blob pink"></span>
+            <span class="decorative-blob teal"></span>
+
+            <div class="relative max-w-7xl mx-auto space-y-6">
+                <div class="toolbar-card rounded-2xl p-5 md:p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg"><i class="fa-solid fa-layer-group text-xl"></i></div>
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-3">
+                                <h3 class="text-lg md:text-xl font-bold text-gray-800">Pro-Admin Yönetim Alanı</h3>
+                                <span class="hero-badge text-xs px-3 py-1 rounded-full text-blue-700 font-semibold" id="today-badge">-</span>
+                            </div>
+                            <p class="text-sm text-gray-500 max-w-2xl">Güncel durum kartları, dosya yönetimi ve kritik uyarıları tek ekrandan takip edin. Hızlı aksiyon butonları ile kayıt ekleme ve mod değişimini buradan yönetin.</p>
+                        </div>
                     </div>
-                    <div class="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col h-full">
-                        <div class="p-4 bg-[#ffc107] text-gray-800 flex justify-between items-center"><h3 class="font-bold"><i class="fa-regular fa-clock mr-2"></i> Ajanda</h3></div>
-                        <div class="p-3 bg-gray-50 border-b border-gray-100">
-                            <div class="flex gap-2">
-                                <input type="date" id="todo-date" class="border rounded p-2 text-sm text-gray-600 shadow-sm focus:outline-none focus:border-blue-500">
-                                <input type="text" id="todo-input" placeholder="Not ekle..." class="flex-1 border rounded p-2 text-sm shadow-sm focus:outline-none focus:border-blue-500">
-                                <select id="todo-tag" class="text-sm border rounded p-2 w-24 bg-white shadow-sm focus:outline-none focus:border-blue-500 text-gray-600"><option value="Genel">Genel</option><option value="Muhasebe">Finans</option><option value="Filo">Filo</option><option value="İK">İK</option><option value="Acil">Acil</option></select>
-                                <button onclick="addTodo()" class="bg-yellow-500 text-white px-3 rounded hover:bg-yellow-600 transition"><i class="fa-solid fa-plus"></i></button>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full lg:w-auto">
+                        <div class="info-chip rounded-xl px-4 py-3 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-white text-blue-600 flex items-center justify-center shadow"><i class="fa-solid fa-user-check"></i></div>
+                            <div class="leading-tight">
+                                <p class="text-xs text-gray-500">Aktif Personel</p>
+                                <strong class="text-lg" id="pill-personel">0</strong>
                             </div>
                         </div>
-                        <div class="flex-1 p-0 overflow-y-auto"><table class="w-full text-left text-sm text-gray-600"><tbody class="divide-y divide-gray-100" id="todo-list-table"></tbody></table></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PERSONEL -->
-            <div id="section-personel" class="hidden h-full flex gap-6">
-                <div class="w-1/3 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
-                    <div class="flex border-b border-gray-200">
-                        <button onclick="setPersonelFilter('active')" id="p-filter-active" class="flex-1 py-3 text-sm text-center transition personel-filter-active border-b-2 border-blue-500">Aktif Çalışanlar</button>
-                        <button onclick="setPersonelFilter('passive')" id="p-filter-passive" class="flex-1 py-3 text-sm text-center transition personel-filter-inactive border-b-2 border-transparent">Eski Personeller</button>
-                    </div>
-                    <div class="p-4 border-b bg-gray-50"><div class="relative"><i class="fa-solid fa-search absolute left-3 top-3 text-gray-400 text-sm"></i><input type="text" id="personel-search" onkeyup="renderPersonelList()" placeholder="Personel Ara..." class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"></div></div>
-                    <div class="flex-1 overflow-y-auto" id="personel-list"></div>
-                </div>
-                <div class="w-2/3 flex flex-col gap-6" id="personel-detail-container">
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6" id="personel-header-card"></div>
-                    <div class="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
-                        <div class="flex bg-gray-100 border-b px-4 pt-4 gap-1" id="personel-folder-tabs"></div>
-                        <div class="p-6 bg-white flex-1 overflow-y-auto">
-                            <div class="text-xs text-gray-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> <span id="personel-breadcrumb-path">Personel / Seçili Değil</span></div>
-                            <div id="personel-files-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+                        <div class="info-chip rounded-xl px-4 py-3 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-white text-orange-500 flex items-center justify-center shadow"><i class="fa-solid fa-car"></i></div>
+                            <div class="leading-tight">
+                                <p class="text-xs text-gray-500">Filo Yönetimi</p>
+                                <strong class="text-lg" id="pill-arac">0</strong>
+                            </div>
+                        </div>
+                        <div class="info-chip rounded-xl px-4 py-3 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-white text-emerald-500 flex items-center justify-center shadow"><i class="fa-solid fa-clipboard-check"></i></div>
+                            <div class="leading-tight">
+                                <p class="text-xs text-gray-500">Bekleyen İşler</p>
+                                <strong class="text-lg" id="pill-todos">0</strong>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- ARAÇ -->
-            <div id="section-arac" class="hidden h-full flex gap-6">
-                 <div class="w-1/3 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
-                    <div class="p-4 border-b bg-gray-50 font-bold flex justify-between text-gray-700"><span>Filo Listesi</span> <span id="arac-count-badge" class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded"></span></div>
-                    <div class="flex-1 overflow-y-auto" id="arac-list"></div>
-                </div>
-                <div class="w-2/3 flex flex-col gap-6">
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6" id="arac-header-card"></div>
-                    <div class="flex-1 bg-white rounded-xl shadow-sm border flex flex-col">
-                        <div class="flex bg-gray-100 border-b px-4 pt-4 gap-1" id="arac-folder-tabs"></div>
-                        <div class="p-6 overflow-y-auto"><div class="text-xs text-gray-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> <span id="arac-breadcrumb-path">Araç / Seçili Değil</span></div><div id="arac-files-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- DEMİRBAŞ -->
-            <div id="section-demirbas" class="hidden h-full flex gap-6">
-                <div class="w-1/3 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
-                    <div class="p-4 border-b bg-gray-50 font-bold flex justify-between text-gray-700"><span>Varlık Listesi</span><span id="demirbas-count-badge" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded"></span></div>
-                    <div class="flex-1 overflow-y-auto" id="demirbas-list"></div>
-                </div>
-                <div class="w-2/3 flex flex-col gap-6">
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6" id="demirbas-header-card"></div>
-                    <div class="flex-1 bg-white rounded-xl shadow-sm border flex flex-col">
-                        <div class="flex bg-gray-100 border-b px-4 pt-4 gap-1" id="demirbas-folder-tabs"></div>
-                        <div class="p-6 overflow-y-auto"><div class="text-xs text-gray-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> <span id="demirbas-breadcrumb-path">Demirbaş / Seçili Değil</span></div><div id="demirbas-files-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- BELGELER -->
-            <div id="section-belgeler" class="hidden h-full flex flex-col">
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
-                    <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-                        <h3 class="font-bold text-gray-700">Kurumsal Evraklar</h3>
-                        <div class="flex gap-4">
-                            <div class="relative"><i class="fa-solid fa-search absolute left-3 top-3 text-gray-400 text-sm"></i><input type="text" id="belge-search" onkeyup="renderBelgelerList()" placeholder="Belge Ara..." class="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"></div>
-                            <button onclick="openModal('add', 'belge')" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 transition">Belge Ekle</button>
+                <div class="relative space-y-6">
+                <!-- DASHBOARD -->
+                <div id="section-dashboard" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6" id="dashboard-stats"></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col h-full">
+                            <div class="p-4 bg-[#dc3545] text-white flex justify-between items-center"><h3 class="font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i> Kritik Sistem Uyarıları</h3></div>
+                            <div class="flex-1 p-0 overflow-y-auto"><table class="w-full text-left text-sm text-gray-600"><tbody class="divide-y divide-gray-100" id="system-alerts-table"></tbody></table></div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col h-full">
+                            <div class="p-4 bg-[#ffc107] text-gray-800 flex justify-between items-center"><h3 class="font-bold"><i class="fa-regular fa-clock mr-2"></i> Ajanda</h3></div>
+                            <div class="p-3 bg-gray-50 border-b border-gray-100">
+                                <div class="flex gap-2">
+                                    <input type="date" id="todo-date" class="border rounded p-2 text-sm text-gray-600 shadow-sm focus:outline-none focus:border-blue-500">
+                                    <input type="text" id="todo-input" placeholder="Not ekle..." class="flex-1 border rounded p-2 text-sm shadow-sm focus:outline-none focus:border-blue-500">
+                                    <select id="todo-tag" class="text-sm border rounded p-2 w-24 bg-white shadow-sm focus:outline-none focus:border-blue-500 text-gray-600"><option value="Genel">Genel</option><option value="Muhasebe">Finans</option><option value="Filo">Filo</option><option value="İK">İK</option><option value="Acil">Acil</option></select>
+                                    <button onclick="addTodo()" class="bg-yellow-500 text-white px-3 rounded hover:bg-yellow-600 transition"><i class="fa-solid fa-plus"></i></button>
+                                </div>
+                            </div>
+                            <div class="flex-1 p-0 overflow-y-auto"><table class="w-full text-left text-sm text-gray-600"><tbody class="divide-y divide-gray-100" id="todo-list-table"></tbody></table></div>
                         </div>
                     </div>
-                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto" id="belgeler-grid"></div>
                 </div>
-            </div>
-            
-            <!-- AYARLAR -->
-            <div id="section-settings" class="hidden h-full flex flex-col p-10 overflow-y-auto">
-                <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200 w-full max-w-2xl mb-6 text-left">
-                    <h3 class="font-bold text-lg mb-4 border-b pb-2 text-gray-800">Firma Ayarları</h3>
-                    <div class="grid grid-cols-1 gap-4">
-                        <div><label class="block text-sm font-semibold text-gray-600 mb-1">Firma Adı</label><input type="text" id="set-comp-name" class="w-full border p-2 rounded focus:outline-none focus:border-blue-500" placeholder="Firma Adı"></div>
-                        <div><label class="block text-sm font-semibold text-gray-600 mb-1">Unvan</label><input type="text" id="set-comp-title" class="w-full border p-2 rounded focus:outline-none focus:border-blue-500" placeholder="Unvan"></div>
-                        <div><label class="block text-sm font-semibold text-gray-600 mb-1">Logo</label><input type="file" id="set-comp-logo" accept="image/*" class="w-full border p-2 rounded text-sm text-gray-500"></div>
+
+                <!-- PERSONEL -->
+                <div id="section-personel" class="hidden h-full flex gap-6">
+                    <div class="w-1/3 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                        <div class="flex border-b border-gray-200">
+                            <button onclick="setPersonelFilter('active')" id="p-filter-active" class="flex-1 py-3 text-sm text-center transition personel-filter-active border-b-2 border-blue-500">Aktif Çalışanlar</button>
+                            <button onclick="setPersonelFilter('passive')" id="p-filter-passive" class="flex-1 py-3 text-sm text-center transition personel-filter-inactive border-b-2 border-transparent">Eski Personeller</button>
+                        </div>
+                        <div class="p-4 border-b bg-gray-50"><div class="relative"><i class="fa-solid fa-search absolute left-3 top-3 text-gray-400 text-sm"></i><input type="text" id="personel-search" onkeyup="renderPersonelList()" placeholder="Personel Ara..." class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"></div></div>
+                        <div class="flex-1 overflow-y-auto" id="personel-list"></div>
                     </div>
-                    <button onclick="saveCompanySettings()" class="bg-blue-600 text-white px-6 py-2 rounded mt-4 hover:bg-blue-700 transition font-semibold">Kaydet</button>
+                    <div class="w-2/3 flex flex-col gap-6" id="personel-detail-container">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6" id="personel-header-card"></div>
+                        <div class="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
+                            <div class="flex bg-gray-100 border-b px-4 pt-4 gap-1" id="personel-folder-tabs"></div>
+                            <div class="p-6 bg-white flex-1 overflow-y-auto">
+                                <div class="text-xs text-gray-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> <span id="personel-breadcrumb-path">Personel / Seçili Değil</span></div>
+                                <div id="personel-files-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="bg-white p-10 rounded-xl shadow-lg border border-gray-200 text-center max-w-2xl w-full">
-                    <div class="mb-6"><i class="fa-solid fa-database text-5xl text-slate-700"></i></div>
-                    <h2 class="text-xl font-bold text-gray-800 mb-2">Veri Yönetimi</h2>
-                    <p class="text-gray-500 mb-4 text-sm">Çalışma Modu: <span id="mode-indicator" class="font-bold text-blue-600">Kontrol Ediliyor...</span></p>
-                    <div class="flex justify-center gap-4">
-                        <button onclick="resetSystem()" class="bg-red-50 text-red-600 border border-red-200 py-3 px-6 rounded-lg hover:bg-red-100 font-semibold transition"><i class="fa-solid fa-trash-can mr-2"></i> Verileri Sıfırla</button>
+
+                <!-- ARAÇ -->
+                <div id="section-arac" class="hidden h-full flex gap-6">
+                     <div class="w-1/3 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                        <div class="p-4 border-b bg-gray-50 font-bold flex justify-between text-gray-700"><span>Filo Listesi</span><span id="arac-count-badge" class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded"></span></div>
+                        <div class="flex-1 overflow-y-auto" id="arac-list"></div>
                     </div>
+                    <div class="w-2/3 flex flex-col gap-6">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6" id="arac-header-card"></div>
+                        <div class="flex-1 bg-white rounded-xl shadow-sm border flex flex-col">
+                            <div class="flex bg-gray-100 border-b px-4 pt-4 gap-1" id="arac-folder-tabs"></div>
+                            <div class="p-6 overflow-y-auto"><div class="text-xs text-gray-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> <span id="arac-breadcrumb-path">Araç / Seçili Değil</span></div><div id="arac-files-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DEMİRBAŞ -->
+                <div id="section-demirbas" class="hidden h-full flex gap-6">
+                    <div class="w-1/3 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                        <div class="p-4 border-b bg-gray-50 font-bold flex justify-between text-gray-700"><span>Varlık Listesi</span><span id="demirbas-count-badge" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded"></span></div>
+                        <div class="flex-1 overflow-y-auto" id="demirbas-list"></div>
+                    </div>
+                    <div class="w-2/3 flex flex-col gap-6">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6" id="demirbas-header-card"></div>
+                        <div class="flex-1 bg-white rounded-xl shadow-sm border flex flex-col">
+                            <div class="flex bg-gray-100 border-b px-4 pt-4 gap-1" id="demirbas-folder-tabs"></div>
+                            <div class="p-6 overflow-y-auto"><div class="text-xs text-gray-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> <span id="demirbas-breadcrumb-path">Demirbaş / Seçili Değil</span></div><div id="demirbas-files-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BELGELER -->
+                <div id="section-belgeler" class="hidden h-full flex flex-col">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
+                        <div class="p-5 border-b flex justify-between items-center bg-gray-50">
+                            <h3 class="font-bold text-gray-700">Kurumsal Evraklar</h3>
+                            <div class="flex gap-4">
+                                <div class="relative"><i class="fa-solid fa-search absolute left-3 top-3 text-gray-400 text-sm"></i><input type="text" id="belge-search" onkeyup="renderBelgelerList()" placeholder="Belge Ara..." class="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"></div>
+                                <button onclick="openModal('add', 'belge')" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 transition">Belge Ekle</button>
+                            </div>
+                        </div>
+                        <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto" id="belgeler-grid"></div>
+                    </div>
+                </div>
+
+                <!-- AYARLAR -->
+                <div id="section-settings" class="hidden h-full flex flex-col p-10 overflow-y-auto">
+                    <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200 w-full max-w-2xl mb-6 text-left">
+                        <h3 class="font-bold text-lg mb-4 border-b pb-2 text-gray-800">Firma Ayarları</h3>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div><label class="block text-sm font-semibold text-gray-600 mb-1">Firma Adı</label><input type="text" id="set-comp-name" class="w-full border p-2 rounded focus:outline-none focus:border-blue-500" placeholder="Firma Adı"></div>
+                            <div><label class="block text-sm font-semibold text-gray-600 mb-1">Unvan</label><input type="text" id="set-comp-title" class="w-full border p-2 rounded focus:outline-none focus:border-blue-500" placeholder="Unvan"></div>
+                            <div><label class="block text-sm font-semibold text-gray-600 mb-1">Logo</label><input type="file" id="set-comp-logo" accept="image/*" class="w-full border p-2 rounded text-sm text-gray-500"></div>
+                        </div>
+                        <button onclick="saveCompanySettings()" class="bg-blue-600 text-white px-6 py-2 rounded mt-4 hover:bg-blue-700 transition font-semibold">Kaydet</button>
+                    </div>
+                    <div class="bg-white p-10 rounded-xl shadow-lg border border-gray-200 text-center max-w-2xl w-full">
+                        <div class="mb-6"><i class="fa-solid fa-database text-5xl text-slate-700"></i></div>
+                        <h2 class="text-xl font-bold text-gray-800 mb-2">Veri Yönetimi</h2>
+                        <p class="text-gray-500 mb-4 text-sm">Çalışma Modu: <span id="mode-indicator" class="font-bold text-blue-600">Kontrol Ediliyor...</span></p>
+                        <div class="flex justify-center gap-4">
+                            <button onclick="resetSystem()" class="bg-red-50 text-red-600 border border-red-200 py-3 px-6 rounded-lg hover:bg-red-100 font-semibold transition"><i class="fa-solid fa-trash-can mr-2"></i> Verileri Sıfırla</button>
+                        </div>
+                    </div>
+                </div>
+
                 </div>
             </div>
 
         </div>
-    </main>
-
     <!-- MODAL -->
     <div id="general-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden opacity-0 transition-opacity">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]">
@@ -232,6 +283,17 @@
         let state = { personel: [], arac: [], demirbas: [], belgeler: [], todos: [], company: {}, ui: { selectedPersonId: null, currentPersonelTab: 'ozluk', selectedAracId: null, currentAracTab: 'ruhsat', selectedDemirbasId: null, currentDemirbasTab: 'tapu', currentSection: 'dashboard', personelFilter: 'active' } };
         let currentFormType = null;
         let currentEditingId = null;
+
+        // --- UI BADGE ---
+        function renderToolbarBadges() {
+            const today = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+            document.getElementById('today-badge').innerText = today;
+
+            const activePersonel = state.personel.filter(p => !p.isten_cikis).length;
+            document.getElementById('pill-personel').innerText = activePersonel;
+            document.getElementById('pill-arac').innerText = state.arac.length;
+            document.getElementById('pill-todos').innerText = state.todos.length;
+        }
 
         // --- API ABSTRACTION LAYER ---
         async function apiCall(endpoint, method = 'GET', body = null, isFileUpload = false) {
@@ -397,6 +459,7 @@
         function renderAll() {
             renderSidebar();
             renderDashboard();
+            renderToolbarBadges();
             if(state.ui.currentSection === 'personel') { renderPersonelList(); if(state.ui.selectedPersonId) selectPerson(state.ui.selectedPersonId); }
             else if(state.ui.currentSection === 'arac') { renderAracList(); if(state.ui.selectedAracId) selectArac(state.ui.selectedAracId); }
             else if(state.ui.currentSection === 'demirbas') { renderDemirbasList(); if(state.ui.selectedDemirbasId) selectDemirbas(state.ui.selectedDemirbasId); }
@@ -496,6 +559,30 @@
         }
 
         // --- TODOS ---
+        async function addTodo() {
+            const textEl = document.getElementById('todo-input');
+            const dateEl = document.getElementById('todo-date');
+            const tagEl = document.getElementById('todo-tag');
+
+            const text = textEl.value.trim();
+            const date = dateEl.value || new Date().toISOString();
+            const subtext = tagEl.value || 'Genel';
+
+            if (!text) {
+                Swal.fire('Uyarı', 'Lütfen bir not başlığı girin.', 'warning');
+                return;
+            }
+
+            try {
+                await apiCall('todos', 'POST', { text, date, subtext });
+                textEl.value = '';
+                renderToolbarBadges();
+                await fetchAllData();
+            } catch (e) {
+                Swal.fire('Hata', 'Not eklenemedi. Lütfen tekrar deneyin.', 'error');
+            }
+        }
+
         function renderTodos() {
             document.getElementById('todo-list-table').innerHTML = state.todos.map(t => `<tr class="border-b"><td class="p-3">${t.baslik}</td></tr>`).join('');
         }
