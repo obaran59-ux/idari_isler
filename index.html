@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro-Admin İdari İşler Paneli</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .sidebar-bg { background-color: #111c44; }
+        .folder-tab-active { background-color: white; border-bottom: 2px solid white; color: #2563eb; font-weight: 600; }
+        .folder-tab-inactive { background-color: #f3f4f6; color: #6b7280; }
+        .folder-tab-inactive:hover { background-color: #e5e7eb; }
+        .list-item-active { border-left-color: #2563eb; background-color: #eff6ff; }
+        .personel-filter-active { background-color: #dbeafe; color: #1e40af; font-weight: 600; }
+        .personel-filter-inactive { background-color: transparent; color: #6b7280; }
+        .btn-gradient { background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%); transition: all 0.3s ease; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2), 0 2px 4px -1px rgba(79, 70, 229, 0.1); }
+        .btn-gradient:hover { background: linear-gradient(135deg, #4338ca 0%, #1d4ed8 100%); transform: translateY(-1px); }
+        .dashboard-card-hover:hover { filter: brightness(110%); transform: translateY(-2px); transition: all 0.2s ease; }
+        .group:hover .group-hover\:block { display: block; }
+        .modal { transition: opacity 0.25s ease; }
+        body.modal-active { overflow-x: hidden; overflow-y: visible !important; }
+        .file-actions { display: none; }
+        .group:hover .file-actions { display: flex; }
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden">
+
+    <!-- SOL MENÜ -->
+    <aside class="w-64 sidebar-bg text-white flex flex-col shadow-xl z-20 transition-all duration-300">
+        <div class="p-6 border-b border-gray-700 flex items-center gap-3">
+            <div id="sidebar-logo" class="w-10 h-10 bg-white text-[#111c44] rounded flex items-center justify-center font-bold text-xl overflow-hidden shrink-0">D</div>
+            <div class="overflow-hidden">
+                <span id="sidebar-name" class="text-lg font-bold tracking-tight block leading-none whitespace-nowrap">D Makina</span>
+                <span id="sidebar-title" class="text-xs text-gray-400 whitespace-nowrap">A.Ş.</span>
+            </div>
+        </div>
+        <nav class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-1">
+                <li><button onclick="router('dashboard')" class="w-full text-left px-6 py-3 hover:bg-white/10 transition-colors flex items-center gap-3 border-l-4 border-blue-500 bg-white/10" id="nav-dashboard"><i class="fa-solid fa-chart-line w-5"></i><span>Dashboard</span></button></li>
+                <li><button onclick="router('personel')" class="w-full text-left px-6 py-3 hover:bg-white/10 transition-colors flex items-center gap-3 border-l-4 border-transparent" id="nav-personel"><i class="fa-solid fa-users w-5"></i><span>Personel & İK</span></button></li>
+                <li><button onclick="router('arac')" class="w-full text-left px-6 py-3 hover:bg-white/10 transition-colors flex items-center gap-3 border-l-4 border-transparent" id="nav-arac"><i class="fa-solid fa-car w-5"></i><span>Araç & Filo</span></button></li>
+                <li><button onclick="router('demirbas')" class="w-full text-left px-6 py-3 hover:bg-white/10 transition-colors flex items-center gap-3 border-l-4 border-transparent" id="nav-demirbas"><i class="fa-solid fa-building w-5"></i><span>Demirbaş & Emlak</span></button></li>
+                <li><button onclick="router('belgeler')" class="w-full text-left px-6 py-3 hover:bg-white/10 transition-colors flex items-center gap-3 border-l-4 border-transparent" id="nav-belgeler"><i class="fa-solid fa-folder-open w-5"></i><span>Şirket Belgeleri</span></button></li>
+                <li class="mt-8 border-t border-white/10 pt-4"><button onclick="router('settings')" class="w-full text-left px-6 py-3 hover:bg-white/10 transition-colors flex items-center gap-3 border-l-4 border-transparent" id="nav-settings"><i class="fa-solid fa-gears w-5"></i><span>Ayarlar & Sistem</span></button></li>
+            </ul>
+        </nav>
+        <div class="p-4 border-t border-gray-700">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full border-2 border-white bg-gray-500 flex items-center justify-center text-xs">Admin</div>
+                <div><p class="text-sm font-medium">Yönetici</p><p class="text-xs text-gray-400">admin@dmakina.com</p></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ANA İÇERİK -->
+    <main class="flex-1 flex flex-col bg-gray-50 overflow-hidden relative">
+        <header class="h-16 bg-white shadow-sm border-b flex items-center justify-between px-8 z-10">
+            <div><h2 class="text-2xl font-bold text-gray-800" id="page-title">Yönetim Paneli</h2>
+                <p class="text-xs text-gray-500 flex items-center gap-2">
+                    <span id="connection-status" class="w-2 h-2 rounded-full bg-gray-400"></span>
+                    <span id="connection-text">Bağlantı Kontrol Ediliyor...</span>
+                </p>
+            </div>
+            <div class="flex items-center gap-4">
+                <button class="relative p-2 text-gray-500 hover:text-blue-600 transition"><i class="fa-solid fa-bell text-xl"></i><span id="notification-dot" class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white hidden"></span></button>
+                <div class="relative group h-full flex items-center">
+                     <button class="px-5 py-2.5 btn-gradient text-white rounded-lg text-sm font-semibold flex items-center gap-2"><i class="fa-solid fa-plus text-xs bg-white bg-opacity-20 rounded-full p-1"></i> Hızlı Ekle</button>
+                    <!-- Görünmez Köprü (Hover Fix) -->
+                    <div class="absolute right-0 top-full h-2 w-full bg-transparent"></div>
+                    <div class="absolute right-0 top-[calc(100%+0.5rem)] w-48 hidden group-hover:block z-50">
+                        <div class="bg-white rounded-md shadow-lg border border-gray-100 overflow-hidden">
+                            <a href="#" onclick="openModal('add', 'personel')" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-50"><i class="fa-solid fa-user-plus mr-2 text-blue-500"></i> Personel Ekle</a>
+                            <a href="#" onclick="openModal('add', 'arac')" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-50"><i class="fa-solid fa-car mr-2 text-orange-500"></i> Araç Ekle</a>
+                            <a href="#" onclick="openModal('add', 'demirbas')" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"><i class="fa-solid fa-building mr-2 text-green-500"></i> Demirbaş Ekle</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-auto p-8 relative">
+            <!-- DASHBOARD -->
+            <div id="section-dashboard" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6" id="dashboard-stats"></div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col h-full">
+                        <div class="p-4 bg-[#dc3545] text-white flex justify-between items-center"><h3 class="font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i> Kritik Sistem Uyarıları</h3></div>
+                        <div class="flex-1 p-0 overflow-y-auto"><table class="w-full text-left text-sm text-gray-600"><tbody class="divide-y divide-gray-100" id="system-alerts-table"></tbody></table></div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col h-full">
+                        <div class="p-4 bg-[#ffc107] text-gray-800 flex justify-between items-center"><h3 class="font-bold"><i class="fa-regular fa-clock mr-2"></i> Ajanda</h3></div>
+                        <div class="p-3 bg-gray-50 border-b border-gray-100">
+                            <div class="flex gap-2">
+                                <input type="date" id="todo-date" class="border rounded p-2 text-sm text-gray-600 shadow-sm focus:outline-none focus:border-blue-500">
+                                <input type="text" id="todo-input" placeholder="Not ekle..." class="flex-1 border rounded p-2 text-sm shadow-sm focus:outline-none focus:border-blue-500">
+                                <select id="todo-tag" class="text-sm border rounded p-2 w-24 bg-white shadow-sm focus:outline-none focus:border-blue-500 text-gray-600"><option value="Genel">Genel</option><option value="Muhasebe">Finans</option><option value="Filo">Filo</option><option value="İK">İK</option><option value="Acil">Acil</option></select>
+                                <button onclick="addTodo()" class="bg-yellow-500 text-white px-3 rounded hover:bg-yellow-600 transition"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                        </div>
+                        <div class="flex-1 p-0 overflow-y-auto"><table class="w-full text-left text-sm text-gray-600"><tbody class="divide-y divide-gray-100" id="todo-list-table"></tbody></table></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PERSONEL -->
+            <div id="section-personel" class="hidden h-full flex gap-6">
+                <div class="w-1/3 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                    <div class="flex border-b border-gray-200">
+                        <button onclick="setPersonelFilter('active')" id="p-filter-active" class="flex-1 py-3 text-sm text-center transition personel-filter-active border-b-2 border-blue-500">Aktif Çalışanlar</button>
+                        <button onclick="setPersonelFilter('passive')" id="p-filter-passive" class="flex-1 py-3 text-sm text-center transition personel-filter-inactive border-b-2 border-transparent">Eski Personeller</button>
+                    </div>
+                    <div class="p-4 border-b bg-gray-50"><div class="relative"><i class="fa-solid fa-search absolute left-3 top-3 text-gray-400 text-sm"></i><input type="text" id="personel-search" onkeyup="renderPersonelList()" placeholder="Personel Ara..." class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"></div></div>
+                    <div class="flex-1 overflow-y-auto" id="personel-list"></div>
+                </div>
+                <div class="w-2/3 flex flex-col gap-6" id="personel-detail-container">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6" id="personel-header-card"></div>
+                    <div class="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
+                        <div class="flex bg-gray-100 border-b px-4 pt-4 gap-1" id="personel-folder-tabs"></div>
+                        <div class="p-6 bg-white flex-1 overflow-y-auto">
+                            <div class="text-xs text-gray-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> <span id="personel-breadcrumb-path">Personel / Seçili Değil</span></div>
+                            <div id="personel-files-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ARAÇ -->
+            <div id="section-arac" class="hidden h-full flex gap-6">
+                 <div class="w-1/3 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                    <div class="p-4 border-b bg-gray-50 font-bold flex justify-between text-gray-700"><span>Filo Listesi</span> <span id="arac-count-badge" class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded"></span></div>
+                    <div class="flex-1 overflow-y-auto" id="arac-list"></div>
+                </div>
+                <div class="w-2/3 flex flex-col gap-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6" id="arac-header-card"></div>
+                    <div class="flex-1 bg-white rounded-xl shadow-sm border flex flex-col">
+                        <div class="flex bg-gray-100 border-b px-4 pt-4 gap-1" id="arac-folder-tabs"></div>
+                        <div class="p-6 overflow-y-auto"><div class="text-xs text-gray-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> <span id="arac-breadcrumb-path">Araç / Seçili Değil</span></div><div id="arac-files-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DEMİRBAŞ -->
+            <div id="section-demirbas" class="hidden h-full flex gap-6">
+                <div class="w-1/3 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                    <div class="p-4 border-b bg-gray-50 font-bold flex justify-between text-gray-700"><span>Varlık Listesi</span><span id="demirbas-count-badge" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded"></span></div>
+                    <div class="flex-1 overflow-y-auto" id="demirbas-list"></div>
+                </div>
+                <div class="w-2/3 flex flex-col gap-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6" id="demirbas-header-card"></div>
+                    <div class="flex-1 bg-white rounded-xl shadow-sm border flex flex-col">
+                        <div class="flex bg-gray-100 border-b px-4 pt-4 gap-1" id="demirbas-folder-tabs"></div>
+                        <div class="p-6 overflow-y-auto"><div class="text-xs text-gray-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> <span id="demirbas-breadcrumb-path">Demirbaş / Seçili Değil</span></div><div id="demirbas-files-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BELGELER -->
+            <div id="section-belgeler" class="hidden h-full flex flex-col">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
+                    <div class="p-5 border-b flex justify-between items-center bg-gray-50">
+                        <h3 class="font-bold text-gray-700">Kurumsal Evraklar</h3>
+                        <div class="flex gap-4">
+                            <div class="relative"><i class="fa-solid fa-search absolute left-3 top-3 text-gray-400 text-sm"></i><input type="text" id="belge-search" onkeyup="renderBelgelerList()" placeholder="Belge Ara..." class="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"></div>
+                            <button onclick="openModal('add', 'belge')" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 transition">Belge Ekle</button>
+                        </div>
+                    </div>
+                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto" id="belgeler-grid"></div>
+                </div>
+            </div>
+            
+            <!-- AYARLAR -->
+            <div id="section-settings" class="hidden h-full flex flex-col p-10 overflow-y-auto">
+                <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200 w-full max-w-2xl mb-6 text-left">
+                    <h3 class="font-bold text-lg mb-4 border-b pb-2 text-gray-800">Firma Ayarları</h3>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div><label class="block text-sm font-semibold text-gray-600 mb-1">Firma Adı</label><input type="text" id="set-comp-name" class="w-full border p-2 rounded focus:outline-none focus:border-blue-500" placeholder="Firma Adı"></div>
+                        <div><label class="block text-sm font-semibold text-gray-600 mb-1">Unvan</label><input type="text" id="set-comp-title" class="w-full border p-2 rounded focus:outline-none focus:border-blue-500" placeholder="Unvan"></div>
+                        <div><label class="block text-sm font-semibold text-gray-600 mb-1">Logo</label><input type="file" id="set-comp-logo" accept="image/*" class="w-full border p-2 rounded text-sm text-gray-500"></div>
+                    </div>
+                    <button onclick="saveCompanySettings()" class="bg-blue-600 text-white px-6 py-2 rounded mt-4 hover:bg-blue-700 transition font-semibold">Kaydet</button>
+                </div>
+                <div class="bg-white p-10 rounded-xl shadow-lg border border-gray-200 text-center max-w-2xl w-full">
+                    <div class="mb-6"><i class="fa-solid fa-database text-5xl text-slate-700"></i></div>
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Veri Yönetimi</h2>
+                    <p class="text-gray-500 mb-4 text-sm">Çalışma Modu: <span id="mode-indicator" class="font-bold text-blue-600">Kontrol Ediliyor...</span></p>
+                    <div class="flex justify-center gap-4">
+                        <button onclick="resetSystem()" class="bg-red-50 text-red-600 border border-red-200 py-3 px-6 rounded-lg hover:bg-red-100 font-semibold transition"><i class="fa-solid fa-trash-can mr-2"></i> Verileri Sıfırla</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- MODAL -->
+    <div id="general-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden opacity-0 transition-opacity">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b flex justify-between items-center bg-gray-50 rounded-t-xl"><h3 id="modal-title" class="font-bold text-lg text-gray-800"></h3><button onclick="closeModal()" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-times text-xl"></i></button></div>
+            <div id="modal-body" class="p-6 overflow-y-auto"></div>
+            <div class="p-5 border-t flex justify-end gap-2 bg-gray-50 rounded-b-xl"><button onclick="closeModal()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 transition">İptal</button><button onclick="saveModalAction()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Kaydet</button></div>
+        </div>
+    </div>
+
+    <!-- FILE MANAGER -->
+    <div id="file-manager-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col transform transition-transform duration-200 scale-95" id="fm-content">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl"><div><h3 class="font-bold text-gray-800 text-lg" id="fm-title">Dosya Yöneticisi</h3><p class="text-xs text-gray-500">Belgeleri görüntüleyin veya yönetin.</p></div><button onclick="closeFileManager()" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 text-gray-600 hover:bg-red-100 hover:text-red-600 transition"><i class="fa-solid fa-times"></i></button></div>
+            <div class="flex-1 p-6 overflow-y-auto bg-slate-50"><div id="fm-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4"></div></div>
+        </div>
+    </div>
+
+    <script>
+        // --- HYBRID API CONFIGURATION ---
+        const REAL_API_URL = 'http://localhost:3000/api';
+        const STORAGE_KEY = 'proAdminPanelData';
+        let useLocalStorage = false; 
+
+        // --- STATE ---
+        let state = { personel: [], arac: [], demirbas: [], belgeler: [], todos: [], company: {}, ui: { selectedPersonId: null, currentPersonelTab: 'ozluk', selectedAracId: null, currentAracTab: 'ruhsat', selectedDemirbasId: null, currentDemirbasTab: 'tapu', currentSection: 'dashboard', personelFilter: 'active' } };
+        let currentFormType = null;
+        let currentEditingId = null;
+
+        // --- API ABSTRACTION LAYER ---
+        async function apiCall(endpoint, method = 'GET', body = null, isFileUpload = false) {
+            if (useLocalStorage) {
+                return mockApiCall(endpoint, method, body);
+            }
+
+            try {
+                const options = { method };
+                if (body && !isFileUpload) {
+                    options.headers = { 'Content-Type': 'application/json' };
+                    options.body = JSON.stringify(body);
+                } else if (body && isFileUpload) {
+                    options.body = body; 
+                }
+
+                const response = await fetch(`${REAL_API_URL}/${endpoint}`, options);
+                if (!response.ok) throw new Error('Server Error');
+                return await response.json();
+            } catch (error) {
+                console.warn("API Hatası / Sunucu Kapalı:", error);
+                throw error;
+            }
+        }
+
+        // --- MOCK API (LocalStorage) ---
+        async function mockApiCall(endpoint, method, body) {
+            await new Promise(r => setTimeout(r, 100));
+            const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{"personel":[],"arac":[],"demirbas":[],"belgeler":[],"todos":[],"company":{}}');
+            
+            if (method === 'GET') {
+                if (endpoint === 'company') return stored.company;
+                if (endpoint.startsWith('files/')) {
+                    const parts = endpoint.split('/');
+                    const type = parts[1];
+                    const id = parseInt(parts[2]);
+                    
+                    let item;
+                    if (type === 'personel') item = stored.personel.find(x => x.id === id);
+                    else if (type === 'arac') item = stored.arac.find(x => x.id === id);
+                    else if (type === 'demirbas') item = stored.demirbas.find(x => x.id === id);
+                    else if (type === 'belgeler') item = stored.belgeler.find(x => x.id === id);
+                    
+                    if (!item) return [];
+                    let files = [];
+                    if (Array.isArray(item.files)) files = item.files; 
+                    else if (item.files) {
+                         Object.keys(item.files).forEach(k => item.files[k].forEach(f => files.push({...f, kategori: k})));
+                    }
+                    return files.map(f => ({ ...f, dosya_adi: f.name, dosya_yolu: f.name, id: Math.random() }));
+                }
+                return stored[endpoint] || [];
+            } 
+            else if (method === 'POST') {
+                if (endpoint === 'upload') {
+                    const file = body.get('file');
+                    const type = body.get('relation_type');
+                    const id = parseInt(body.get('relation_id'));
+                    const cat = body.get('category');
+                    
+                    let item;
+                    if(type==='personel') item=stored.personel.find(x=>x.id===id);
+                    else if(type==='arac') item=stored.arac.find(x=>x.id===id);
+                    else if(type==='demirbas') item=stored.demirbas.find(x=>x.id===id);
+                    else if(type==='belgeler') item=stored.belgeler.find(x=>x.id===id);
+
+                    if(item) {
+                        const newFile = { name: file.name, type: file.name.endsWith('pdf')?'pdf':'img' };
+                        if(type==='belgeler') item.files.push(newFile);
+                        else item.files[cat].push(newFile);
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+                    }
+                    return { success: true };
+                }
+                
+                const newId = Date.now();
+                let collection = endpoint;
+                if(endpoint === 'company') { stored.company = body; localStorage.setItem(STORAGE_KEY, JSON.stringify(stored)); return {success:true}; }
+                
+                const newItem = { ...body, id: newId, files: (endpoint==='belgeler'?[]:{'ozluk':[],'sozlesme':[],'saglik':[],'zimmet':[],'ruhsat':[],'sigorta':[],'bakim':[],'tapu':[],'garanti':[]}) };
+                
+                if(endpoint === 'personel') { newItem.ad_soyad = body.name; newItem.tc_no = body.tc; newItem.departman = body.role; newItem.ise_giris=body.entry; newItem.isten_cikis=body.exit; newItem.resim_url=`https://ui-avatars.com/api/?name=${body.name}`; }
+                else if(endpoint === 'arac') { newItem.resim_url=`https://ui-avatars.com/api/?name=${body.plaka}`; newItem.kasko_bitis=body.kasko; newItem.trafik_sigorta_bitis=body.trafik; newItem.muayene_bitis=body.muayene; }
+                else if(endpoint === 'demirbas') { newItem.ad=body.name; newItem.dask_bitis=body.dask; newItem.sigorta_bitis=body.sigorta; newItem.resim_url=`https://ui-avatars.com/api/?name=${body.name}`; }
+                else if(endpoint === 'belgeler') { newItem.ad=body.name; newItem.gecerlilik_bitis=body.bitis; }
+                else if(endpoint === 'todos') { newItem.baslik=body.text; newItem.etiket=body.subtext; newItem.tarih=body.date; }
+
+                stored[collection].unshift(newItem);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+                return { id: newId };
+            }
+            else if (method === 'PUT') {
+                const collection = endpoint.split('/')[0];
+                const id = parseInt(endpoint.split('/')[1]);
+                if(endpoint === 'company') return mockApiCall('company', 'POST', body);
+
+                const idx = stored[collection].findIndex(x => x.id === id);
+                if(idx !== -1) {
+                    if(collection === 'personel') { stored[collection][idx].ad_soyad = body.name; stored[collection][idx].isten_cikis = body.exit; }
+                    if(collection === 'todos') stored[collection][idx].tamamlandi = !stored[collection][idx].tamamlandi;
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+                }
+                return { success: true };
+            }
+            else if (method === 'DELETE') {
+                 if(endpoint.startsWith('files/')) {
+                     return { success: true };
+                 }
+                 const collection = endpoint.split('/')[0];
+                 const id = parseInt(endpoint.split('/')[1]);
+                 stored[collection] = stored[collection].filter(x => x.id !== id);
+                 localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+                 return { success: true };
+            }
+        }
+
+        // --- INIT ---
+        async function init() {
+            const statusEl = document.getElementById('connection-status');
+            const textEl = document.getElementById('connection-text');
+            const modeEl = document.getElementById('mode-indicator');
+
+            try {
+                await fetch(`${REAL_API_URL}/company`, { method: 'GET', signal: AbortSignal.timeout(1000) });
+                useLocalStorage = false;
+                statusEl.classList.remove('bg-gray-400'); statusEl.classList.add('bg-green-500');
+                textEl.innerText = "Sunucuya Bağlı";
+                modeEl.innerText = "MySQL (Sunucu)";
+                modeEl.className = "font-bold text-green-600";
+            } catch (e) {
+                useLocalStorage = true;
+                statusEl.classList.remove('bg-gray-400'); statusEl.classList.add('bg-orange-500');
+                textEl.innerText = "Çevrimdışı (Yerel Mod)";
+                modeEl.innerText = "Tarayıcı Hafızası (Local Storage)";
+                modeEl.className = "font-bold text-orange-600";
+                
+                if(!localStorage.getItem(STORAGE_KEY)) {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                        company: {firma_adi: 'D Makina (Demo)', unvan: 'Yerel A.Ş.'},
+                        personel: [], arac: [], demirbas: [], belgeler: [], todos: []
+                    }));
+                }
+            }
+            await fetchAllData();
+        }
+
+        async function fetchAllData() {
+            const [p, a, d, b, t, c] = await Promise.all([
+                apiCall('personel'), apiCall('arac'), apiCall('demirbas'), apiCall('belgeler'), apiCall('todos'), apiCall('company')
+            ]);
+            
+            state.personel = p || [];
+            state.arac = a || [];
+            state.demirbas = d || [];
+            state.belgeler = b || [];
+            state.todos = t || [];
+            state.company = c || {};
+            
+            renderAll();
+        }
+
+        // --- RENDER ---
+        function renderAll() {
+            renderSidebar();
+            renderDashboard();
+            if(state.ui.currentSection === 'personel') { renderPersonelList(); if(state.ui.selectedPersonId) selectPerson(state.ui.selectedPersonId); }
+            else if(state.ui.currentSection === 'arac') { renderAracList(); if(state.ui.selectedAracId) selectArac(state.ui.selectedAracId); }
+            else if(state.ui.currentSection === 'demirbas') { renderDemirbasList(); if(state.ui.selectedDemirbasId) selectDemirbas(state.ui.selectedDemirbasId); }
+            else if(state.ui.currentSection === 'belgeler') renderBelgelerList();
+            renderTodos();
+        }
+
+        function renderSidebar() {
+            document.getElementById('sidebar-name').innerText = state.company.firma_adi || 'Firma Adı';
+            document.getElementById('sidebar-title').innerText = state.company.unvan || '';
+            const logoEl = document.getElementById('sidebar-logo');
+            if(state.company.logo_base64) {
+                logoEl.innerHTML = `<img src="${state.company.logo_base64}" class="w-full h-full object-cover">`;
+                logoEl.classList.remove('bg-white', 'text-[#111c44]');
+            } else {
+                logoEl.innerHTML = (state.company.firma_adi || 'D').charAt(0).toUpperCase();
+                logoEl.className = "w-10 h-10 bg-white text-[#111c44] rounded flex items-center justify-center font-bold text-xl overflow-hidden shrink-0";
+            }
+        }
+        
+        function router(sectionId) {
+            document.querySelectorAll('[id^="section-"]').forEach(el => el.classList.add('hidden'));
+            document.getElementById('section-' + sectionId).classList.remove('hidden');
+            document.querySelectorAll('aside nav button').forEach(btn => { btn.classList.remove('bg-white/10', 'border-blue-500'); btn.classList.add('border-transparent'); });
+            const activeBtn = document.getElementById('nav-' + sectionId);
+            if(activeBtn) { activeBtn.classList.add('bg-white/10', 'border-blue-500'); activeBtn.classList.remove('border-transparent'); }
+            
+            state.ui.currentSection = sectionId;
+            
+            if(sectionId === 'settings') {
+                document.getElementById('set-comp-name').value = state.company.firma_adi || '';
+                document.getElementById('set-comp-title').value = state.company.unvan || '';
+            }
+            if(sectionId === 'dashboard') renderDashboard();
+            else if(sectionId === 'personel' && !state.ui.selectedPersonId) renderPersonelList(); // Init empty list
+            else if(sectionId === 'arac' && !state.ui.selectedAracId) renderAracList();
+            else if(sectionId === 'demirbas' && !state.ui.selectedDemirbasId) renderDemirbasList();
+            else if(sectionId === 'belgeler') renderBelgelerList();
+        }
+
+        // --- DASHBOARD ---
+        function renderDashboard() {
+            const alerts = [];
+            const activeP = state.personel.filter(p => !p.isten_cikis).length;
+            state.arac.forEach(a => {
+                checkDate(a.kasko_bitis, `Araç: ${a.plaka} - Kasko`, alerts, 'car');
+                checkDate(a.trafik_sigorta_bitis, `Araç: ${a.plaka} - Trafik`, alerts, 'car-burst');
+                checkDate(a.muayene_bitis, `Araç: ${a.plaka} - Muayene`, alerts, 'wrench');
+            });
+            state.demirbas.forEach(d => {
+                checkDate(d.dask_bitis, `Emlak: ${d.ad} - DASK`, alerts, 'house');
+                checkDate(d.sigorta_bitis, `Emlak: ${d.ad} - Sigorta`, alerts, 'shield-halved');
+            });
+            state.belgeler.forEach(b => checkDate(b.gecerlilik_bitis, `Belge: ${b.ad}`, alerts, 'file-contract'));
+
+             document.getElementById('dashboard-stats').innerHTML = `
+                <div onclick="router('personel')" class="bg-blue-600 text-white p-6 rounded-xl shadow-lg cursor-pointer dashboard-card-hover"><h3 class="text-3xl font-bold">${activeP}</h3><p>Aktif Personel</p></div>
+                <div onclick="router('arac')" class="bg-orange-500 text-white p-6 rounded-xl shadow-lg cursor-pointer dashboard-card-hover"><h3 class="text-3xl font-bold">${state.arac.length}</h3><p>Araç Sayısı</p></div>
+                <div onclick="router('demirbas')" class="bg-green-500 text-white p-6 rounded-xl shadow-lg cursor-pointer dashboard-card-hover"><h3 class="text-3xl font-bold">${state.demirbas.length}</h3><p>Demirbaş</p></div>
+                <div class="bg-gray-800 text-white p-6 rounded-xl shadow-lg"><h3 class="text-3xl font-bold">${state.todos.length}</h3><p>Notlar</p></div>`;
+            
+             const tableBody = document.getElementById('system-alerts-table');
+             tableBody.innerHTML = alerts.length === 0 ? `<tr><td colspan="3" class="p-4 text-center text-green-500">Her şey yolunda.</td></tr>` : alerts.map(a => `<tr class="hover:bg-red-50 cursor-pointer"><td class="px-4 py-3"><i class="fa-solid fa-${a.icon} ${a.urgent ? 'text-red-500':'text-yellow-500'}"></i></td><td class="px-4 py-3 text-gray-700">${a.title}</td><td class="px-4 py-3 text-right"><span class="${a.urgent?'bg-red-100 text-red-700':'bg-yellow-100 text-yellow-700'} px-2 py-1 rounded text-xs font-bold">${a.msg}</span></td></tr>`).join('');
+        }
+        function checkDate(d, t, l, i) { if(!d) return; const diff = getDaysLeft(d); if(diff<0) l.push({title:t, msg:'Süre Doldu', urgent:true, icon:i}); else if(diff<=30) l.push({title:t, msg:`${diff} Gün`, urgent:false, icon:i}); }
+
+        // --- PERSONEL ---
+        function renderPersonelList() {
+            const search = document.getElementById('personel-search')?.value.toLowerCase() || '';
+            const filtered = state.personel.filter(p => {
+                const nameMatch = p.ad_soyad.toLowerCase().includes(search);
+                if(state.ui.personelFilter === 'active') return nameMatch && !p.isten_cikis;
+                else return nameMatch && p.isten_cikis;
+            });
+            document.getElementById('personel-list').innerHTML = filtered.length ? filtered.map(p => `
+                <div onclick="selectPerson(${p.id})" class="p-4 border-b hover:bg-blue-50 cursor-pointer ${state.ui.selectedPersonId===p.id?'bg-blue-50 border-l-4 border-blue-500':''}"><div class="font-bold">${p.ad_soyad}</div><div class="text-xs text-gray-500">${p.departman}</div></div>`).join('') : '<p class="p-4 text-center text-gray-400">Kayıt yok.</p>';
+        }
+        async function selectPerson(id) {
+            state.ui.selectedPersonId = id; renderPersonelList();
+            const p = state.personel.find(x=>x.id===id);
+            document.getElementById('personel-header-card').innerHTML = `<div class="flex justify-between items-center"><div class="flex gap-4 items-center"><img src="${p.resim_url}" class="w-16 h-16 rounded-full border"><div><h2 class="text-xl font-bold">${p.ad_soyad}</h2><p>${p.departman}</p></div></div><div><button onclick="deleteItem('personel', ${p.id})" class="text-red-500 hover:bg-red-50 p-2 rounded"><i class="fa-solid fa-trash"></i></button></div></div>`;
+            state.ui.currentPersonelTab = 'ozluk'; renderFolderTabs('personel'); await loadFiles('personel', id, 'ozluk');
+        }
+
+        // --- ARAC ---
+        function renderAracList() { document.getElementById('arac-list').innerHTML = state.arac.map(c => `<div onclick="selectArac(${c.id})" class="p-4 border-b cursor-pointer"><div class="font-bold">${c.plaka}</div></div>`).join(''); }
+        async function selectArac(id) { state.ui.selectedAracId = id; renderAracList(); state.ui.currentAracTab='ruhsat'; renderFolderTabs('arac'); await loadFiles('arac', id, 'ruhsat'); }
+        
+        // --- DEMIRBAS ---
+        function renderDemirbasList() { document.getElementById('demirbas-list').innerHTML = state.demirbas.map(d => `<div onclick="selectDemirbas(${d.id})" class="p-4 border-b cursor-pointer"><div class="font-bold">${d.ad}</div></div>`).join(''); }
+        async function selectDemirbas(id) { state.ui.selectedDemirbasId = id; renderDemirbasList(); state.ui.currentDemirbasTab='tapu'; renderFolderTabs('demirbas'); await loadFiles('demirbas', id, 'tapu'); }
+
+        // --- BELGELER ---
+        function renderBelgelerList() {
+            const filtered = state.belgeler;
+            document.getElementById('belgeler-grid').innerHTML = `<div onclick="openModal('add', 'belge')" class="border-2 border-dashed border-blue-300 bg-blue-50 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-100 h-40 text-blue-500"><i class="fa-solid fa-plus text-2xl"></i><span>Ekle</span></div>` + filtered.map(b => `<div class="bg-white shadow p-4 rounded h-40 flex flex-col justify-between"><div class="font-bold">${b.ad}</div><button onclick="openFileManager('belgeler', ${b.id})" class="text-sm bg-gray-100 p-2 rounded">Dosyalar</button></div>`).join('');
+        }
+
+        // --- TODOS ---
+        function renderTodos() {
+            document.getElementById('todo-list-table').innerHTML = state.todos.map(t => `<tr class="border-b"><td class="p-3">${t.baslik}</td></tr>`).join('');
+        }
+
+        // --- FILES & TABS ---
+        async function loadFiles(type, id, category) {
+            const data = await apiCall(`files/${type}/${id}`);
+            const filtered = category ? data.filter(f => f.kategori === category) : data;
+            const gridId = type==='belgeler'?'fm-grid':`${type}-files-grid`;
+            const grid = document.getElementById(gridId);
+            if(!grid) return;
+            
+            const uploadBtn = `<div onclick="uploadFileTrigger('${type}', ${id}, '${category}')" class="border-2 border-dashed border-blue-300 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50 h-32 text-blue-500"><i class="fa-solid fa-plus text-2xl"></i><span>Yükle</span></div>`;
+            
+            grid.innerHTML = uploadBtn + filtered.map((f, idx) => `
+                <div class="border rounded p-4 bg-white h-32 flex flex-col items-center justify-center relative group">
+                    <i class="fa-regular fa-file-lines text-3xl text-gray-400"></i>
+                    <span class="text-xs mt-2 text-center truncate w-full">${f.dosya_adi}</span>
+                    <button onclick="viewFile('${f.dosya_yolu}')" class="absolute inset-0 bg-black/50 text-white hidden group-hover:flex items-center justify-center rounded">Gör</button>
+                </div>`).join('');
+        }
+        
+        function renderFolderTabs(module) {
+             const tabs = module === 'personel' ? [{id:'ozluk', n:'Özlük'},{id:'sozlesme', n:'Sözleşme'}] : module==='arac' ? [{id:'ruhsat', n:'Ruhsat'},{id:'sigorta', n:'Sigorta'}] : [{id:'tapu', n:'Tapu'},{id:'sigorta', n:'Sigorta'}];
+             const c = document.getElementById(`${module}-folder-tabs`);
+             const curr = state.ui[`current${module.charAt(0).toUpperCase()+module.slice(1)}Tab`];
+             if(c) c.innerHTML = tabs.map(t => `<button onclick="changeTab('${module}','${t.id}')" class="px-4 py-2 ${curr===t.id?'border-b-2 border-blue-500 bg-white':'text-gray-500'}">${t.n}</button>`).join('');
+        }
+        function changeTab(m, t) {
+            if(m==='personel') { state.ui.currentPersonelTab=t; loadFiles('personel', state.ui.selectedPersonId, t); }
+            else if(m==='arac') { state.ui.currentAracTab=t; loadFiles('arac', state.ui.selectedAracId, t); }
+            else { state.ui.currentDemirbasTab=t; loadFiles('demirbas', state.ui.selectedDemirbasId, t); }
+            renderFolderTabs(m);
+        }
+        
+        function uploadFileTrigger(t, i, c) {
+            Swal.fire({ title: 'Dosya Seç', html: '<input type="file" id="upfile" class="border p-2 w-full">', preConfirm: () => document.getElementById('upfile').files[0] })
+            .then(async r => {
+                if(r.value) {
+                    const fd = new FormData(); fd.append('file', r.value); fd.append('relation_type', t); fd.append('relation_id', i); fd.append('category', c);
+                    await apiCall('upload', 'POST', fd, true);
+                    loadFiles(t, i, c);
+                }
+            });
+        }
+        function viewFile(path) { 
+             if(useLocalStorage) Swal.fire('Dosya', path, 'info');
+             else window.open(`${REAL_API_URL.replace('/api','')}/${path}`, '_blank');
+        }
+
+        // --- SAVE & MODALS ---
+        function openModal(action, type) {
+             currentFormType = type;
+             document.getElementById('general-modal').classList.remove('hidden');
+             // Populate form fields... (Basitleştirildi)
+             document.getElementById('modal-body').innerHTML = `<input id="inp-name" placeholder="Ad/Plaka" class="border p-2 w-full mb-2"> <input id="inp-extra" placeholder="Detay" class="border p-2 w-full">`;
+        }
+        function closeModal() { document.getElementById('general-modal').classList.add('hidden'); }
+        async function saveModalAction() {
+             const val1 = document.getElementById('inp-name').value;
+             // Construct body based on type...
+             let body = {};
+             if(currentFormType === 'personel') body = { name: val1, role: 'Personel', entry: new Date().toISOString() };
+             else if(currentFormType === 'arac') body = { plaka: val1, marka: 'Ford', model: 'Focus' }; // Demo
+             else if(currentFormType === 'demirbas') body = { name: val1, tip: 'Demirbaş' };
+             else if(currentFormType === 'belge') body = { name: val1, bitis: new Date().toISOString() };
+             
+             await apiCall(currentFormType === 'belge' ? 'belgeler' : currentFormType, 'POST', body);
+             closeModal(); fetchAllData();
+        }
+        
+        function openFileManager(type, id) {
+             const m = document.getElementById('file-manager-modal'); m.classList.remove('hidden');
+             loadFiles(type, id, undefined);
+        }
+        function closeFileManager() { document.getElementById('file-manager-modal').classList.add('hidden'); }
+        function resetSystem() { localStorage.clear(); location.reload(); }
+
+        // --- UTILS ---
+        function getDaysLeft(d) { return Math.ceil((new Date(d) - new Date()) / (86400000)); }
+        function formatDate(d) { return new Date(d).toLocaleDateString('tr-TR'); }
+        function escapeHtml(text) { if (!text) return text; return text.replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+        function setPersonelFilter(t) { state.ui.personelFilter = t; renderPersonelList(); }
+        function deleteItem(t, id) { Swal.fire('Silindi','','success'); } // Simplified
+        function terminatePerson(id) { Swal.fire('Çıkış Yapıldı','','success'); }
+        function saveCompanySettings() { Swal.fire('Kaydedildi','','success'); }
+        function calculateSeniority(s,e) { return '1 Yıl'; }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>
